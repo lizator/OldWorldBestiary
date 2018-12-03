@@ -2,7 +2,6 @@ from openpyxl import Workbook
 from openpyxl import load_workbook
 from tkinter import *
 from tkinter import filedialog
-from tkinter import simpledialog
 from easygui import enterbox
 from tkinter import Toplevel
 import re
@@ -90,31 +89,18 @@ prompts = ["Navn (det der søges efter)", "Sidenummer (i WFRP Old World Beastiar
 "Trappings (separeret med et komma)", "Special Rules (separeret med et komma)"]
 entryCount = 0
 nameData = ""
-directory = "/"
 entryDic = {}
 
-def updateDirectory(filenameList):
-    directory = ""
-    filenameList[len(filenameList) - 1] = None
-    for x in filenameList:
-        if str(x) != "None":
-            directory += str(x) + '/'
-
-def selectData(): # FIXME: check for same name = err
-    global entryCount; global nameData; global directory; global entryDic
-    directory = "C:/Users/Frede/Desktop/OldWorldBeasts"
+def selectData():
+    global entryCount; global nameData; global entryDic
     entryCount = 0
     #Choosing Opsum file
-    root.filename =  filedialog.askopenfilename(initialdir = directory, title = "Select XL Database", filetypes = (("Excel files","*.xlsx"),("All files","*.*")))
-    wbData = load_workbook(root.filename)
-    nameDataList = root.filename.split("/")
-    nameData = nameDataList[len(nameDataList) - 1]
-    updateDirectory(nameDataList)
+    try:
+        load_workbook("data.xlsx")
+    except:
+        wbData = Workbook()
+        wbData.save("data.xlsx")
     wsData = wbData.active
-
-    #updating lable
-    textData = "Dokument valgt: " + nameData
-    vData.set(textData)
 
     #updating entryCount
     x = 1
@@ -125,7 +111,7 @@ def selectData(): # FIXME: check for same name = err
     textEntries = "antal entries: " + str(entryCount)
     vEntries.set(textEntries)
 
-def newEntry():
+def newEntry(): # FIXME: check for same name = err
     global prompts; global entryCount; global directory; global nameData; global entryDic
     wbData = load_workbook(root.filename)
     wsData = wbData.active
@@ -151,46 +137,103 @@ def insertStatFrame(frame, row, column, color):
     name.configure(bg=color)
     return name
 
+def statLabel(frame, txt, bg):
+    name = Label(frame, text=txt)
+    name.place(x=14, y=14, anchor="center")
+    name.configure(bg=bg)
+    return name
+
+def statText(frame, txt):
+    name = Text(frame)
+    name.tag_configure("center", justify='center')
+    name.insert("1.0", txt)
+    name.tag_add("center", "1.0", "end")
+    name.pack()
+    name.configure(font=("Helvetica", 9), bg="#A4A4A4")
+    return name
+
 def openByName():
     global entryDic
     #lineNR = int(entryDic[name])
     window = Toplevel(root)
     #window.title(name)
-    window.minsize(450,170)
-    window.maxsize(450,170)
-    #window.configure(bg="red")
-    nameFrame = Frame(window, height=46, width=210) #30x30 per box
+    xs = 450; ys = 200
+    window.minsize(xs,ys)
+    window.maxsize(xs,ys)
+
+    leftFrame = Frame(window, height=ys, width=210)
+    leftFrame.pack_propagate(0) # don't shrink
+    leftFrame.pack(side=LEFT)
+
+    nameFrame = Frame(leftFrame, height=ys-124, width=210)
     nameFrame.pack_propagate(0) # don't shrink
     nameFrame.pack(side=TOP)
     nameFrame.configure(bg="#040030")
 
-    leftFrame = Frame(window, height=170-46, width=210) #30x30 per box
-    leftFrame.pack_propagate(0) # don't shrink
-    leftFrame.pack(side=BOTTOM)
-    leftFrame.configure(bg="#1C1C1C")
+    nameT = Text(nameFrame, height=1, width=22)
+    nameT.pack(pady=(9, 0))
+    nameT.pack_propagate(0)
+    nameT.insert(END, "123456789012345678901234567890")
+    nameT.configure(font=("Helvetica", 13))
 
-    wsTop = insertStatFrame(leftFrame, 0, 0, "#6E6E6E")
-    bsTop = insertStatFrame(leftFrame, 0, 1, "#6E6E6E")
-    sTop = insertStatFrame(leftFrame, 0, 2, "#6E6E6E")
-    tTop = insertStatFrame(leftFrame, 0, 3, "#6E6E6E")
-    agTop = insertStatFrame(leftFrame, 0, 4, "#6E6E6E")
-    intTop = insertStatFrame(leftFrame, 0, 5, "#6E6E6E")
-    wpTop = insertStatFrame(leftFrame, 0, 6, "#6E6E6E")
-    wsBot = insertStatFrame(leftFrame, 1, 0, "#A4A4A4")
-    bsBot = insertStatFrame(leftFrame, 1, 1, "#A4A4A4")
-    sBot = insertStatFrame(leftFrame, 1, 2, "#A4A4A4")
-    tBot = insertStatFrame(leftFrame, 1, 3, "#A4A4A4")
-    agBot = insertStatFrame(leftFrame, 1, 4, "#A4A4A4")
-    intBot = insertStatFrame(leftFrame, 1, 5, "#A4A4A4")
-    wpBot = insertStatFrame(leftFrame, 1, 6, "#A4A4A4")
+    #initiative + special
+    botNameFrame = Frame(nameFrame, height=(ys-124)/2, width=210)
+    botNameFrame.pack_propagate(0) # don't shrink
+    botNameFrame.pack(side=BOTTOM, padx=(4,0))
+    botNameFrame.configure(bg="#040030")
 
-    mellemStatFrame0 = Frame(leftFrame, height=4, width=30)
-    mellemStatFrame1 = Frame(leftFrame, height=4, width=30)
-    mellemStatFrame2 = Frame(leftFrame, height=4, width=30)
-    mellemStatFrame3 = Frame(leftFrame, height=4, width=30)
-    mellemStatFrame4 = Frame(leftFrame, height=4, width=30)
-    mellemStatFrame5 = Frame(leftFrame, height=4, width=30)
-    mellemStatFrame6 = Frame(leftFrame, height=4, width=30)
+    iniT = Text(botNameFrame, height=1, width=10)
+    iniT.pack(padx=(2,1), side=LEFT)
+    iniT.pack_propagate(0)
+    iniT.insert(END, "Initiative: xD")
+    iniT.configure(font=("Helvetica", 13))
+
+    specialb = Button(botNameFrame, text="Show Special", height=1, width=13)
+    specialb.pack(pady=1, padx=(1, 3), side=RIGHT)
+
+    #Stats
+    statFrame = Frame(leftFrame, height=124, width=210) #30x30 per box + 4 pixel in between
+    statFrame.pack_propagate(0) # don't shrink
+    statFrame.pack(side=BOTTOM)
+    statFrame.configure(bg="#1C1C1C")
+
+    wsTop = insertStatFrame(statFrame, 0, 0, "#6E6E6E")
+    wsTopL = statLabel(wsTop, "WS", "#6E6E6E")
+    bsTop = insertStatFrame(statFrame, 0, 1, "#6E6E6E")
+    bsTopL = statLabel(bsTop, "BS", "#6E6E6E")
+    sTop = insertStatFrame(statFrame, 0, 2, "#6E6E6E")
+    sTopL = statLabel(sTop, "S", "#6E6E6E")
+    tTop = insertStatFrame(statFrame, 0, 3, "#6E6E6E")
+    tTopL = statLabel(tTop, "T", "#6E6E6E")
+    agTop = insertStatFrame(statFrame, 0, 4, "#6E6E6E")
+    agTopL = statLabel(agTop, "Ag", "#6E6E6E")
+    intTop = insertStatFrame(statFrame, 0, 5, "#6E6E6E")
+    intTopL = statLabel(intTop, "Int", "#6E6E6E")
+    wpTop = insertStatFrame(statFrame, 0, 6, "#6E6E6E")
+    wpTopL = statLabel(wpTop, "WP", "#6E6E6E")
+
+    wsBot = insertStatFrame(statFrame, 1, 0, "#A4A4A4")
+    wsBotL = statText(wsBot, "WS")
+    bsBot = insertStatFrame(statFrame, 1, 1, "#A4A4A4")
+    bsBotL = statText(bsBot, "WS")
+    sBot = insertStatFrame(statFrame, 1, 2, "#A4A4A4")
+    sBotL = statText(sBot, "WS")
+    tBot = insertStatFrame(statFrame, 1, 3, "#A4A4A4")
+    tBotL = statText(tBot, "WS")
+    agBot = insertStatFrame(statFrame, 1, 4, "#A4A4A4")
+    agBotL = statText(agBot, "WS")
+    intBot = insertStatFrame(statFrame, 1, 5, "#A4A4A4")
+    intBotL = statText(intBot, "WS")
+    wpBot = insertStatFrame(statFrame, 1, 6, "#A4A4A4")
+    wpBotL = statText(wpBot, "WS")
+
+    mellemStatFrame0 = Frame(statFrame, height=4, width=30)
+    mellemStatFrame1 = Frame(statFrame, height=4, width=30)
+    mellemStatFrame2 = Frame(statFrame, height=4, width=30)
+    mellemStatFrame3 = Frame(statFrame, height=4, width=30)
+    mellemStatFrame4 = Frame(statFrame, height=4, width=30)
+    mellemStatFrame5 = Frame(statFrame, height=4, width=30)
+    mellemStatFrame6 = Frame(statFrame, height=4, width=30)
     mellemStatFrame0.grid(row=2, column=0);
     mellemStatFrame1.grid(row=2, column=1);
     mellemStatFrame2.grid(row=2, column=2);
@@ -206,50 +249,86 @@ def openByName():
     mellemStatFrame5.configure(bg="#383a39")
     mellemStatFrame6.configure(bg="#383a39")
 
-    felTop = insertStatFrame(leftFrame, 3, 0, "#6E6E6E")
-    aTop = insertStatFrame(leftFrame, 3, 1, "#6E6E6E")
-    wTop = insertStatFrame(leftFrame, 3, 2, "#6E6E6E")
-    sbTop = insertStatFrame(leftFrame, 3, 3, "#6E6E6E")
-    tbTop = insertStatFrame(leftFrame, 3, 4, "#6E6E6E")
-    mTop = insertStatFrame(leftFrame, 3, 5, "#6E6E6E")
-    magTop = insertStatFrame(leftFrame, 3, 6, "#6E6E6E")
-    felBot = insertStatFrame(leftFrame, 4, 0, "#A4A4A4")
-    aBot = insertStatFrame(leftFrame, 4, 1, "#A4A4A4")
-    wBot = insertStatFrame(leftFrame, 4, 2, "#A4A4A4")
-    sbBot = insertStatFrame(leftFrame, 4, 3, "#A4A4A4")
-    tbBot = insertStatFrame(leftFrame, 4, 4, "#A4A4A4")
-    mBot = insertStatFrame(leftFrame, 4, 5, "#A4A4A4")
-    magBot = insertStatFrame(leftFrame, 4, 6, "#A4A4A4")
+    felTop = insertStatFrame(statFrame, 3, 0, "#6E6E6E")
+    felTopL = statLabel(felTop, "Fel", "#6E6E6E")
+    aTop = insertStatFrame(statFrame, 3, 1, "#6E6E6E")
+    aTopL = statLabel(aTop, "A", "#6E6E6E")
+    wTop = insertStatFrame(statFrame, 3, 2, "#6E6E6E")
+    wTopL = statLabel(wTop, "W", "#6E6E6E")
+    sbTop = insertStatFrame(statFrame, 3, 3, "#6E6E6E")
+    sbTopL = statLabel(sbTop, "SB", "#6E6E6E")
+    tbTop = insertStatFrame(statFrame, 3, 4, "#6E6E6E")
+    tbTopL = statLabel(tbTop, "TB", "#6E6E6E")
+    mTop = insertStatFrame(statFrame, 3, 5, "#6E6E6E")
+    mTopL = statLabel(mTop, "M", "#6E6E6E")
+    magTop = insertStatFrame(statFrame, 3, 6, "#6E6E6E")
+    magTopL = statLabel(magTop, "Mag", "#6E6E6E")
 
-    insertStatFrame(bsTop, leftFrame, 0, 1)
+    felBot = insertStatFrame(statFrame, 4, 0, "#A4A4A4")
+    felBotL = statText(felBot, "WS")
+    aBot = insertStatFrame(statFrame, 4, 1, "#A4A4A4")
+    aBotL = statText(aBot, "WS")
+    wBot = insertStatFrame(statFrame, 4, 2, "#A4A4A4")
+    wBotL = statText(wBot, "WS")
+    sbBot = insertStatFrame(statFrame, 4, 3, "#A4A4A4")
+    sbBotL = statText(sbBot, "WS")
+    tbBot = insertStatFrame(statFrame, 4, 4, "#A4A4A4")
+    tbBotL = statText(tbBot, "WS")
+    mBot = insertStatFrame(statFrame, 4, 5, "#A4A4A4")
+    mBotL = statText(mBot, "WS")
+    magBot = insertStatFrame(statFrame, 4, 6, "#A4A4A4")
+    magBotL = statText(magBot, "WS")
 
-    rightFrame = Frame(window, height=170, width=240)
+    #right side
+    rightFrame = Frame(window, height=ys, width=240)
     rightFrame.pack(side=RIGHT)
     rightFrame.pack_propagate(0) # don't shrink
     rightFrame.configure(bg="#383a39")
+
+    skillT = Text(rightFrame, height=6, width=58)
+    skillT.pack(pady=(1, 0))
+    skillT.pack_propagate(0)
+    skillT.insert(END, "this is a test\nthis is test xD\n12345678901234567890123456789012345678901234567890123456789012345678901234567890")
+    skillT.configure(font=("Helvetica", 6))
+
+    talentT = Text(rightFrame, height=6, width=58)
+    talentT.pack(pady=(1, 0))
+    talentT.pack_propagate(0)
+    talentT.insert(END, "this is a test\nthis is test xD\n12345678901234567890123456789012345678901234567890123456789012345678901234567890")
+    talentT.configure(font=("Helvetica", 6))
+
+    trappingsT = Text(rightFrame, height=3, width=58)
+    trappingsT.pack(pady=(1, 0))
+    trappingsT.pack_propagate(0)
+    trappingsT.insert(END, "this is a test\nthis is test xD\n12345678901234567890123456789012345678901234567890123456789012345678901234567890")
+    trappingsT.configure(font=("Helvetica", 6))
+
+    extraFrame = Frame(rightFrame, height=32, width=240)
+    extraFrame.pack(pady=1, padx=1, side=BOTTOM)
+    extraFrame.pack_propagate(0)
+    extraFrame.configure(bg="#383a39")
+
+    weaponT = Text(extraFrame, height=2, width=35)
+    weaponT.pack(pady=(1, 0), padx=(1, 0), side=LEFT)
+    weaponT.pack_propagate(0)
+    weaponT.insert(END, "this is a test\nthis is test xD\n12345678901234567890123456789012345678901234567890123456789012345678901234567890")
+    weaponT.configure(font=("Helvetica", 7))
+
+    saveb = Button(extraFrame, text="Save", height=1, width=6)
+    saveb.pack(pady=1, padx=2, side=RIGHT)
 
 #UI
 
 root = Tk()
 root.title("New Worlds Beastiary")
+root.minsize(400,360)
+root.maxsize(400,360)
 
 def insertMellemFrame(height, place):
     mellemFrame = Frame(place, height=height, width=400)
     mellemFrame.pack_propagate(0) # don't shrink
     mellemFrame.pack()
-
-insertMellemFrame(30, root)
-
-dataFrame = Frame(root, height=30, width=400)
-dataFrame.pack_propagate(0) # don't shrink
-dataFrame.pack()
-
-vData = StringVar()
-textData = "Dokument valgt: " + nameData
-vData.set(textData)
-datal = Label(dataFrame, textvariable=vData)
-
-datal.pack(side=TOP)
+    mellemFrame.configure(bg="blue")
 
 insertMellemFrame(15, root)
 
@@ -273,16 +352,12 @@ insertMellemFrame(30, root)
 autoFrame = Frame(root, height=225, width=400)
 autoFrame.pack_propagate(0) # don't shrink
 autoFrame.pack()
-
-
-
+autoFrame.configure(bg="red")
 
 insertMellemFrame(30, root) # FIXME:
 
 testb = Button(root, text="test", command=openByName, height=1, width=20)
 testb.pack()
-
-root.minsize(440,360)
 
 selectData()
 
